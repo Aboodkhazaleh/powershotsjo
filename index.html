@@ -1130,8 +1130,13 @@ footer{background:var(--dark2);color:rgba(255,255,255,.7);padding:56px 5% 28px}
         <div style="font-size:13px;color:rgba(255,255,255,.7);margin-bottom:14px"><a href="tel:+962775660296" style="color:inherit;text-decoration:none">📞 0775660296</a></div>
         <div class="footer-social">
           <a href="https://x.com/Powershotsjo" target="_blank" rel="noopener" class="social-btn" aria-label="X (Twitter)" style="text-decoration:none;color:inherit">𝕏</a>
-          <a href="#" class="social-btn" aria-label="LinkedIn" style="text-decoration:none;color:inherit">in</a>
-          <a href="#" class="social-btn" aria-label="Instagram" style="text-decoration:none;color:inherit">📷</a>
+          <a href="https://www.instagram.com/powershotsjo?igsh=ZWY3a2Q5MXN0enFx&utm_source=qr" target="_blank" rel="noopener" class="social-btn" aria-label="Instagram" style="text-decoration:none;color:inherit">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2.5" y="2.5" width="19" height="19" rx="5" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/>
+              <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/>
+            </svg>
+          </a>
         </div>
       </div>
       <div>
@@ -1231,6 +1236,7 @@ const PRODUCT_EMOJI = {
   'Turmeric Gold Ginger': {emoji:'✨', bg:'#FFF3C0'},
   'Apple Fresh Ginger': {emoji:'🍏', bg:'#E8F8E8'}
 };
+const MIN_ORDER = 3.00; // Jordanian dinar
 let cart = {}; // { itemName: qty }
 let selectedPay = null;
 
@@ -1298,8 +1304,20 @@ function renderCart() {
   document.getElementById('cartTotal').textContent = total.toFixed(2) + ' ' + t('JOD','دينار');
   document.getElementById('checkoutTotal').textContent = total.toFixed(2) + ' ' + t('JOD','دينار');
   const shipNote = document.getElementById('cartShippingNote');
-  if (total >= 5) shipNote.textContent = t('✓ Free delivery — your order qualifies!','✓ توصيل مجاني — طلبك مؤهل!');
-  else shipNote.textContent = t(`Add ${(5-total).toFixed(2)} JOD more for free delivery`, `أضف ${(5-total).toFixed(2)} دينار إضافية للحصول على توصيل مجاني`);
+  const checkoutBtn = document.querySelector('#cartFooter .btn-checkout');
+  if (total < MIN_ORDER) {
+    shipNote.textContent = t(`⚠ Minimum order is ${MIN_ORDER.toFixed(2)} JOD — add ${(MIN_ORDER-total).toFixed(2)} JOD more`, `⚠ الحد الأدنى للطلب ${MIN_ORDER.toFixed(2)} دينار — أضف ${(MIN_ORDER-total).toFixed(2)} دينار`);
+    shipNote.style.color = '#C4520A';
+    if (checkoutBtn) { checkoutBtn.disabled = true; checkoutBtn.style.opacity = '.55'; checkoutBtn.style.cursor = 'not-allowed'; }
+  } else if (total >= 5) {
+    shipNote.textContent = t('✓ Free delivery — your order qualifies!','✓ توصيل مجاني — طلبك مؤهل!');
+    shipNote.style.color = '';
+    if (checkoutBtn) { checkoutBtn.disabled = false; checkoutBtn.style.opacity = ''; checkoutBtn.style.cursor = ''; }
+  } else {
+    shipNote.textContent = t(`Add ${(5-total).toFixed(2)} JOD more for free delivery`, `أضف ${(5-total).toFixed(2)} دينار إضافية للحصول على توصيل مجاني`);
+    shipNote.style.color = '';
+    if (checkoutBtn) { checkoutBtn.disabled = false; checkoutBtn.style.opacity = ''; checkoutBtn.style.cursor = ''; }
+  }
   footerEl.style.display = 'block';
 }
 function openCart() {
@@ -1329,6 +1347,10 @@ function showStep(step) {
 }
 function goToCheckout() {
   if (cartItemCount() === 0) { showToast(t('Your cart is empty','سلتك فارغة')); return; }
+  if (cartTotal() < MIN_ORDER) {
+    showToast(t(`Minimum order is ${MIN_ORDER.toFixed(2)} JOD`, `الحد الأدنى للطلب ${MIN_ORDER.toFixed(2)} دينار`));
+    return;
+  }
   showStep(2);
 }
 function backToCart() {
@@ -1352,6 +1374,7 @@ function selectPay(method) {
   document.getElementById('cliqInfo').classList.toggle('show', method === 'Cliq');
 }
 function validateCheckout() {
+  if (cartTotal() < MIN_ORDER) { showToast(t(`Minimum order is ${MIN_ORDER.toFixed(2)} JOD`, `الحد الأدنى للطلب ${MIN_ORDER.toFixed(2)} دينار`)); return null; }
   const name = document.getElementById('coName').value.trim();
   const loc = document.getElementById('coLocation').value.trim();
   const phone = document.getElementById('coPhone').value.trim();
